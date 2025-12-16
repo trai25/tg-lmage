@@ -53,22 +53,17 @@ export default defineConfig({
           // React 核心库
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           // 状态管理和数据请求
-          'state-vendor': ['zustand', 'axios', 'react-query'],
+          'state-vendor': ['zustand', 'axios'],
           // UI 和动画库
           'ui-vendor': ['framer-motion', 'react-hot-toast', 'react-dropzone'],
         },
       },
     },
     
-    // 优化配置
+    // 优化配置 - 使用 esbuild 替代 terser
     chunkSizeWarningLimit: 1000,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',
+    target: 'es2015',
   },
 
   // 优化依赖预构建

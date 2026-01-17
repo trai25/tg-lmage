@@ -1,186 +1,118 @@
 import { motion } from 'framer-motion';
 import {
-  HiOutlineCloudUpload,
-  HiOutlinePhotograph,
-  HiOutlineStar,
-  HiOutlineTag,
-  HiOutlineShieldCheck,
-  HiOutlineDeviceMobile,
-  HiOutlineQuestionMarkCircle,
-  HiOutlineSupport,
-} from 'react-icons/hi';
-import { FiGithub, FiMail } from 'react-icons/fi';
-import './Help.css';
+  CloudArrowUp,
+  Image as ImageIcon,
+  Star,
+  Tag,
+  ShieldCheck,
+  DeviceMobile,
+  Question,
+  Lifebuoy,
+  GithubLogo,
+  Envelope
+} from '@phosphor-icons/react';
 
-/**
- * 帮助页面
- */
 const HelpPage = () => {
   const faqs = [
     {
-      question: '如何上传图片？',
-      answer:
-        '您可以通过三种方式上传图片：1. 拖拽图片到上传区域；2. 点击上传区域选择文件；3. 使用 Ctrl+V 粘贴剪贴板中的图片。',
+      question: 'How do I sketch?',
+      answer: 'Drag & drop, click to browse, or paste (Ctrl+V). Easy peasy.',
     },
     {
-      question: '支持哪些图片格式？',
-      answer:
-        '我们支持常见的图片格式，包括 PNG、JPG、JPEG、GIF、WebP 和 SVG。',
+      question: 'What kind of paper?',
+      answer: 'PNG, JPG, JPEG, GIF, WebP, SVG. Standard stuff.',
     },
     {
-      question: '图片大小有限制吗？',
-      answer: '单个图片文件大小限制为 10MB。如果需要上传更大的文件，建议先进行压缩。',
+      question: 'How big?',
+      answer: 'Max 10MB per sketch. Keep it light.',
     },
     {
-      question: '上传的图片会保存多久？',
-      answer:
-        '基于 Telegram 的存储特性，您上传的图片将永久保存，不会过期。',
+      question: 'Is it permanent?',
+      answer: 'Yes, stored safely via Telegram APIs. It won\'t fade.',
     },
     {
-      question: '如何管理我的图片？',
-      answer:
-        '注册并登录后，您可以在"我的图片"页面查看、编辑、删除和管理所有上传的图片。',
-    },
-    {
-      question: '什么是收藏功能？',
-      answer:
-        '收藏功能允许您标记重要的图片，方便快速查找。在图片卡片上点击星标图标即可收藏。',
-    },
-    {
-      question: '如何使用标签？',
-      answer:
-        '标签可以帮助您分类管理图片。您可以在"标签管理"页面创建标签，然后在编辑图片时为图片添加标签。',
-    },
-    {
-      question: '是否支持批量操作？',
-      answer:
-        '是的，在"我的图片"页面，您可以开启选择模式，批量选择图片进行删除、添加标签等操作。',
+      question: 'How to organize?',
+      answer: 'Use the Gallery to view, Stars to favorite, and Tags to categorize.',
     },
   ];
 
-  const features = [
-    {
-      Icon: HiOutlineCloudUpload,
-      title: '快速上传',
-      description: '支持拖拽、点击和粘贴三种上传方式',
-    },
-    {
-      Icon: HiOutlinePhotograph,
-      title: '图片管理',
-      description: '完整的图片管理功能，支持搜索、筛选和排序',
-    },
-    {
-      Icon: HiOutlineStar,
-      title: '收藏功能',
-      description: '标记重要图片，快速访问常用资源',
-    },
-    {
-      Icon: HiOutlineTag,
-      title: '标签系统',
-      description: '使用标签分类管理，提高组织效率',
-    },
-    {
-      Icon: HiOutlineShieldCheck,
-      title: '安全可靠',
-      description: '基于 Telegram 存储，数据安全有保障',
-    },
-    {
-      Icon: HiOutlineDeviceMobile,
-      title: '响应式设计',
-      description: '完美适配各种设备，随时随地访问',
-    },
-  ];
+  const FeatureCard = ({ Icon, title, desc }) => (
+    <div className="flex flex-col items-center text-center p-4 border-b-2 border-dashed border-gray-200 last:border-0 md:border-b-0 md:border-r-2 last:md:border-r-0">
+       <div className="text-pencil mb-2"><Icon size={32} /></div>
+       <h3 className="font-hand font-bold text-xl mb-1">{title}</h3>
+       <p className="font-hand text-sm text-gray-500">{desc}</p>
+    </div>
+  );
 
   return (
-    <motion.div
-      className="help-page"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* 页面标题 */}
-      <div className="help-header">
-        <h1 className="help-title">帮助中心</h1>
-        <p className="help-subtitle">
-          了解如何使用 TG-Image，快速上手图片管理
+    <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-hand font-bold text-pencil rotate-slight-1">
+          <Lifebuoy className="inline mr-2 text-marker-blue" />
+          Help & Guide
+        </h1>
+        <p className="text-xl text-gray-400 font-hand mt-2 rotate-slight-n1">
+          How to use this sketchbook
         </p>
       </div>
 
-      {/* 功能特性 */}
-      <section className="help-section">
-        <h2 className="section-title">核心功能</h2>
-        <div className="features-grid">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              className="feature-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-            >
-              <div className="feature-icon">
-                <feature.Icon />
+      {/* Features Grid (Table of Contents style) */}
+      <div className="bg-white p-6 shadow-sketch border border-gray-200 rotate-slight-n1 mb-12 relative rounded-sm">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-white/40 backdrop-blur-sm -rotate-1 shadow-tape"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <FeatureCard Icon={CloudArrowUp} title="Quick Draw" desc="Drag, drop, paste." />
+           <FeatureCard Icon={Tag} title="Label It" desc="Tags & favorites." />
+           <FeatureCard Icon={ShieldCheck} title="Safe" desc="Secure storage." />
+        </div>
+      </div>
+
+      {/* FAQ Scraps */}
+      <div className="mb-12">
+         <h2 className="text-3xl font-hand font-bold text-pencil mb-8 text-center border-b-2 border-marker-pink inline-block px-4 mx-auto rotate-1">
+           <Question className="inline mr-2" /> Frequently Asked
+         </h2>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {faqs.map((faq, idx) => (
+              <div 
+                key={idx}
+                className={`bg-white p-6 shadow-sketch border border-gray-200 relative ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
+              >
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/40 backdrop-blur-sm shadow-tape"></div>
+                <h3 className="font-hand font-bold text-xl text-pencil mb-2">{faq.question}</h3>
+                <p className="font-hand text-gray-600">{faq.answer}</p>
               </div>
-              <h3 className="feature-title">{feature.title}</h3>
-              <p className="feature-description">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+            ))}
+         </div>
+      </div>
 
-      {/* 常见问题 */}
-      <section className="help-section">
-        <h2 className="section-title">常见问题</h2>
-        <div className="faq-list">
-          {faqs.map((faq, index) => (
-            <motion.div
-              key={index}
-              className="faq-item"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.5 }}
+      {/* Contact Card */}
+      <div className="max-w-md mx-auto bg-white p-8 shadow-sketch border border-gray-200 rotate-2 relative transform transition-transform hover:scale-105">
+         <div className="absolute top-2 right-2 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border border-dashed border-gray-300">
+            <Lifebuoy size={24} className="text-gray-400" />
+         </div>
+         <h3 className="font-hand font-bold text-2xl text-pencil mb-4">Still stuck?</h3>
+         <p className="font-hand text-gray-600 mb-6">
+           If you can't find your answer, drop a note in the suggestion box.
+         </p>
+         <div className="flex gap-4">
+            <a 
+              href="https://github.com/xiyewuqiu/new-lmage/issues" 
+              target="_blank" 
+              rel="noreferrer"
+              className="flex-1 btn-doodle text-center flex items-center justify-center gap-2"
             >
-              <h3 className="faq-question">
-                <HiOutlineQuestionMarkCircle />
-                {faq.question}
-              </h3>
-              <p className="faq-answer">{faq.answer}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+              <GithubLogo size={20} /> GitHub
+            </a>
+            <a 
+              href="mailto:support@tg-image.com" 
+              className="flex-1 btn-primary text-center flex items-center justify-center gap-2"
+            >
+              <Envelope size={20} /> Email
+            </a>
+         </div>
+      </div>
 
-      {/* 联系支持 */}
-      <section className="help-section">
-        <div className="contact-card">
-          <div className="contact-icon">
-            <HiOutlineSupport />
-          </div>
-          <h2 className="contact-title">需要更多帮助？</h2>
-          <p className="contact-description">
-            如果您有其他问题或建议，欢迎通过以下方式联系我们
-          </p>
-          <div className="contact-actions">
-            <a
-              href="https://github.com/xiyewuqiu/new-lmage/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-            >
-              <FiGithub />
-              GitHub Issues
-            </a>
-            <a
-              href="mailto:support@tg-image.com"
-              className="btn btn-secondary"
-            >
-              <FiMail />
-              发送邮件
-            </a>
-          </div>
-        </div>
-      </section>
-    </motion.div>
+    </div>
   );
 };
 

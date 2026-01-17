@@ -1,42 +1,35 @@
 import { Outlet } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
-import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
-import './MainLayout.css';
 
-/**
- * 主布局组件
- * 包含侧边栏、头部、内容区域和底部
- */
 const MainLayout = () => {
   return (
-    <div className="main-layout">
-      {/* 侧边栏 */}
+    <div className="min-h-screen p-2 md:p-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-6 pb-20 md:pb-8">
+      {/* Spine / Navigation */}
       <Sidebar />
 
-      {/* 主内容区域 */}
-      <div className="main-content">
-        {/* 头部 */}
+      {/* Main Page Area */}
+      <main className="flex-1 flex flex-col min-w-0 z-10">
+        {/* Top Scribbles (Header) */}
         <Header />
 
-        {/* 页面内容 */}
-        <motion.main
-          className="page-content"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Outlet />
-        </motion.main>
+        {/* The Paper Sheet */}
+        <div className="paper-card flex-1 p-4 md:p-8 mt-6 rounded-sm rotate-slight-1 transition-transform duration-500">
+           {/* The Tape Holding the Paper */}
+           <div className="tape-top"></div>
+           
+           <div className="relative z-10">
+             <Outlet />
+           </div>
+        </div>
+        
+        {/* Footer Note */}
+        <footer className="mt-8 text-center font-hand text-gray-400 text-lg -rotate-1">
+          Made with <span className="text-marker-pink">♥</span> by Old Wang
+        </footer>
+      </main>
 
-        {/* 底部 */}
-        <Footer />
-      </div>
-
-      {/* 返回顶部按钮 */}
       <ScrollToTop />
     </div>
   );

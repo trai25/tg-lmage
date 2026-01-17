@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { isValidEmail, validatePassword, validateUsername } from '@/utils/validation';
-import '../Login/Login.css';
 
-/**
- * 注册页面
- */
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { register } = useAuthStore();
@@ -19,65 +14,19 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: '',
   });
-  const [errors, setErrors] = useState({});
 
-  // 处理输入变化
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // 清除错误
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 验证表单
-  const validateForm = () => {
-    const newErrors = {};
-
-    // 验证用户名
-    const usernameValidation = validateUsername(formData.username);
-    if (!usernameValidation.isValid) {
-      newErrors.username = usernameValidation.errors[0];
-    }
-
-    // 验证邮箱
-    if (!formData.email.trim()) {
-      newErrors.email = '请输入邮箱';
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = '请输入有效的邮箱地址';
-    }
-
-    // 验证密码
-    const passwordValidation = validatePassword(formData.password);
-    if (!passwordValidation.isValid) {
-      newErrors.password = passwordValidation.errors[0];
-    }
-
-    // 验证确认密码
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = '请确认密码';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = '两次输入的密码不一致';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // 处理提交
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    
+    // Basic validation
+    if (!formData.username) return toast.error('Who are you?');
+    if (!formData.email) return toast.error('Need an email!');
+    if (formData.password.length < 6) return toast.error('Password too short!');
+    if (formData.password !== formData.confirmPassword) return toast.error('Passwords don\'t match!');
 
     setLoading(true);
 
@@ -89,106 +38,96 @@ const RegisterPage = () => {
       });
 
       if (result.success) {
-        toast.success('注册成功！');
+        toast.success('Sketchbook created! Welcome!');
         navigate('/dashboard');
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('注册失败，请重试');
+      toast.error('Could not create account...');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="login-page"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="login-header">
-        <h1>创建账户</h1>
-        <p>注册新账户开始使用</p>
-      </div>
-
-      <form className="login-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="username">用户名</label>
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-n1">
+            Pick a Name
+          </label>
           <input
             type="text"
-            id="username"
             name="username"
-            placeholder="请输入用户名"
+            placeholder="Artist Name"
+            className="input-hand"
             value={formData.username}
             onChange={handleChange}
             disabled={loading}
           />
-          {errors.username && (
-            <span className="form-error">{errors.username}</span>
-          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="email">邮箱</label>
+        <div className="space-y-1">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-1">
+            Email
+          </label>
           <input
             type="email"
-            id="email"
             name="email"
-            placeholder="请输入邮箱"
+            placeholder="contact@doodle.com"
+            className="input-hand"
             value={formData.email}
             onChange={handleChange}
             disabled={loading}
           />
-          {errors.email && <span className="form-error">{errors.email}</span>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">密码</label>
+        <div className="space-y-1">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-n1">
+            Secret Code
+          </label>
           <input
             type="password"
-            id="password"
             name="password"
-            placeholder="请输入密码（至少8位）"
+            placeholder="Min 6 chars"
+            className="input-hand"
             value={formData.password}
             onChange={handleChange}
             disabled={loading}
           />
-          {errors.password && (
-            <span className="form-error">{errors.password}</span>
-          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">确认密码</label>
+        <div className="space-y-1">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-1">
+            Repeat Code
+          </label>
           <input
             type="password"
-            id="confirmPassword"
             name="confirmPassword"
-            placeholder="请再次输入密码"
+            placeholder="Just to be sure"
+            className="input-hand"
             value={formData.confirmPassword}
             onChange={handleChange}
             disabled={loading}
           />
-          {errors.confirmPassword && (
-            <span className="form-error">{errors.confirmPassword}</span>
-          )}
         </div>
 
-        <div className="form-actions">
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? '注册中...' : '注册'}
-          </button>
-        </div>
+        <button 
+          type="submit" 
+          className="btn-primary w-full mt-8 text-2xl font-bold py-3 rotate-slight-n1 disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? 'Binding Book...' : 'Create Sketchbook'}
+        </button>
       </form>
 
-      <div className="form-footer">
-        <p>
-          已有账号？ <Link to="/login">立即登录</Link>
+      <div className="mt-8 text-center">
+        <p className="font-hand text-lg text-gray-500">
+          Already have one? <Link to="/login" className="text-marker-blue underline decoration-wavy font-bold hover:text-blue-500">Open it</Link>
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

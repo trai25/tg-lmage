@@ -1,38 +1,29 @@
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { uploadFiles, validateFile } from '@/services/uploadService';
 import {
-  HiOutlineCloudUpload,
-  HiOutlinePhotograph,
-  HiOutlineDocumentDuplicate,
-  HiOutlineClipboard,
-  HiOutlineCheck,
-  HiOutlineLink,
-  HiOutlineCode,
-  HiOutlineX,
-  HiOutlineRefresh,
-  HiOutlineDownload,
-} from 'react-icons/hi';
-import { SiMarkdown } from 'react-icons/si';
-import './Home.css';
+  CloudArrowUp,
+  Image as ImageIcon,
+  Copy,
+  DownloadSimple,
+  FileMd,
+  X,
+  ArrowClockwise,
+  Check,
+  Link as LinkIcon
+} from '@phosphor-icons/react';
 
-/**
- * 首页 - 图片上传
- */
 const HomePage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0, percent: 0 });
 
-  // 处理文件上传
   const handleUpload = async (files) => {
-    // 验证文件
     const validFiles = [];
     for (const file of files) {
       const validation = validateFile(file, {
-        maxSize: 10 * 1024 * 1024, // 10MB
+        maxSize: 10 * 1024 * 1024,
         allowedTypes: ['image/*'],
       });
 
@@ -40,15 +31,11 @@ const HomePage = () => {
         toast.error(`${file.name}: ${validation.errors.join(', ')}`);
         continue;
       }
-
       validFiles.push(file);
     }
 
-    if (validFiles.length === 0) {
-      return;
-    }
+    if (validFiles.length === 0) return;
 
-    // 开始上传
     setUploading(true);
     setUploadResults([]);
     setUploadProgress({ completed: 0, total: validFiles.length, percent: 0 });
@@ -56,278 +43,188 @@ const HomePage = () => {
     try {
       const result = await uploadFiles(
         validFiles,
-        (progress) => {
-          setUploadProgress(progress);
-        },
+        (progress) => setUploadProgress(progress),
         { concurrency: 5, retries: 3 }
       );
 
       if (result.success) {
         setUploadResults(result.data);
-        toast.success(`成功上传 ${result.summary.success}/${result.summary.total} 张图片`);
+        toast.success(`Done! ${result.summary.success} sketches added.`);
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('上传失败，请重试');
+      toast.error('Something went wrong...');
     } finally {
       setUploading(false);
     }
   };
 
-  // 配置 Dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleUpload,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'],
-    },
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'] },
     multiple: true,
     disabled: uploading,
   });
 
-  // 复制到剪贴板
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success('已复制到剪贴板');
+    toast.success('Copied to clipboard!');
   };
 
-  // 导出元数据
   const exportMetadata = () => {
     const successResults = uploadResults.filter(r => r.success);
     const metadata = {
-      exportTime: new Date().toISOString(),
-      totalCount: uploadResults.length,
-      successCount: successResults.length,
+      timestamp: new Date().toISOString(),
       images: successResults.map(r => ({
         filename: r.filename,
         url: window.location.origin + r.data.src,
-        origin: r.data.src,
-        size: r.size,
-        type: r.type,
-        uploadTime: r.uploadTime,
       }))
     };
-    
     const blob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `images-${Date.now()}.json`;
+    a.download = `diary-entries-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('元数据已导出');
   };
 
-  // 复制所有链接
   const copyAllUrls = () => {
-    const urls = uploadResults
-      .filter(r => r.success)
-      .map(r => window.location.origin + r.data.src)
-      .join('\n');
-    navigator.clipboard.writeText(urls);
-    toast.success('已复制所有图片链接');
+    const urls = uploadResults.filter(r => r.success).map(r => window.location.origin + r.data.src).join('\n');
+    copyToClipboard(urls);
   };
 
-  // 复制 Markdown 列表
   const copyMarkdownList = () => {
-    const markdown = uploadResults
-      .filter(r => r.success)
-      .map(r => `![${r.filename}](${window.location.origin}${r.data.src})`)
-      .join('\n');
-    navigator.clipboard.writeText(markdown);
-    toast.success('已复制 Markdown 列表');
+    const markdown = uploadResults.filter(r => r.success).map(r => `![${r.filename}](${window.location.origin}${r.data.src})`).join('\n');
+    copyToClipboard(markdown);
   };
 
-  // 重新上传
-  const handleUploadAgain = () => {
-    setUploadResults([]);
-    setUploadProgress({ completed: 0, total: 0, percent: 0 });
-  };
-
-  // 单独重试失败的图片
-  const retryFailedImage = async (index) => {
-    const failedResult = uploadResults[index];
-    if (!failedResult || failedResult.success) return;
-
-    toast.loading('重新上传中...');
-    // TODO: 实现单独重试逻辑
+  const retryFailedImage = (index) => {
+    toast("Manual retry not implemented yet", { icon: '🚧' });
   };
 
   const successCount = uploadResults.filter(r => r.success).length;
-  const failedCount = uploadResults.filter(r => !r.success).length;
 
   return (
-    <motion.div
-      className="home-page"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* 上传区域 */}
-      <section className="upload-section">
-        <div className="upload-header">
-          <h1 className="upload-title">上传图片</h1>
-          <p className="upload-subtitle">简单、快速、安全的图片托管服务</p>
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-4xl font-bold text-pencil rotate-slight-n1">New Entry</h2>
+        <p className="text-xl text-gray-500 font-hand mt-2 rotate-slight-1">Paste your memories here...</p>
+      </div>
+
+      {/* Upload Zone */}
+      {uploadResults.length === 0 && !uploading && (
+        <div
+          {...getRootProps()}
+          className={`
+            border-4 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300
+            ${isDragActive ? 'border-marker-blue bg-blue-50 scale-105 rotate-1' : 'border-gray-300 hover:border-pencil hover:rotate-slight-1'}
+          `}
+        >
+          <input {...getInputProps()} />
+          <CloudArrowUp size={64} className={`mx-auto mb-4 ${isDragActive ? 'text-marker-blue' : 'text-gray-400'}`} weight="light" />
+          <p className="text-2xl text-pencil font-bold">
+            {isDragActive ? 'Drop it like it\'s hot!' : 'Drag sketches here'}
+          </p>
+          <p className="text-lg text-gray-400 mt-2">or click to browse</p>
         </div>
+      )}
 
-        {/* 拖拽上传 */}
-        {uploadResults.length === 0 && !uploading && (
-          <motion.div
-            {...getRootProps()}
-            className={`dropzone ${isDragActive ? 'drag-active' : ''}`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <input {...getInputProps()} />
-            <div className="dropzone-icon">
-              <HiOutlineCloudUpload />
-            </div>
-            <p className="dropzone-text">
-              {isDragActive ? '释放以上传文件' : '拖放图片到这里或点击选择'}
-            </p>
-            <div className="dropzone-hint">
-              <span className="dropzone-hint-item">
-                <HiOutlinePhotograph />
-                支持多种图片格式
-              </span>
-              <span className="dropzone-hint-item">
-                <HiOutlineDocumentDuplicate />
-                支持批量上传
-              </span>
-              <span className="dropzone-hint-item">
-                <HiOutlineClipboard />
-                最多并发 5 个
-              </span>
-            </div>
-          </motion.div>
-        )}
+      {/* Progress */}
+      {uploading && (
+        <div className="text-center py-12">
+          <div className="text-3xl font-bold text-pencil mb-4 animate-bounce">
+            Drawing... {Math.round(uploadProgress.percent)}%
+          </div>
+          <div className="w-full h-4 border-2 border-pencil rounded-full overflow-hidden p-0.5">
+            <div 
+              className="h-full bg-marker-yellow transition-all duration-300 rounded-full"
+              style={{ width: `${uploadProgress.percent}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
 
-        {/* 上传进度 */}
-        {uploading && (
-          <motion.div
-            className="upload-progress"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="progress-info">
-              <span className="progress-text">
-                上传中... {uploadProgress.completed}/{uploadProgress.total}
-              </span>
-              <span className="progress-percent">{uploadProgress.percent}%</span>
+      {/* Results Board */}
+      {uploadResults.length > 0 && !uploading && (
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="flex flex-wrap justify-between items-center mb-6 border-b-2 border-dashed border-gray-200 pb-4">
+            <div className="text-2xl font-bold text-pencil">
+              <Check size={32} className="inline text-green-500 mr-2" />
+              Success: {successCount}
             </div>
-            <div className="progress-bar-container">
-              <motion.div
-                className="progress-bar"
-                initial={{ width: 0 }}
-                animate={{ width: `${uploadProgress.percent}%` }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* 批量上传结果 */}
-        {uploadResults.length > 0 && !uploading && (
-          <motion.div
-            className="upload-result-batch"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="result-header">
-              <div className="result-summary">
-                <HiOutlineCheck className="success-icon" />
-                <h3>上传完成！</h3>
-                <p>成功 {successCount} 张{failedCount > 0 && ` · 失败 ${failedCount} 张`}</p>
-              </div>
-              <div className="result-actions">
-                <button className="btn btn-ghost" onClick={exportMetadata} title="导出元数据">
-                  <HiOutlineDownload />
-                  导出 JSON
-                </button>
-                <button className="btn btn-ghost" onClick={copyAllUrls} title="复制所有链接">
-                  <HiOutlineLink />
-                  复制链接
-                </button>
-                <button className="btn btn-ghost" onClick={copyMarkdownList} title="复制 Markdown">
-                  <SiMarkdown />
-                  复制 MD
-                </button>
-              </div>
-            </div>
-
-            {/* 图片列表 */}
-            <div className="result-list">
-              <AnimatePresence>
-                {uploadResults.map((result, index) => (
-                  <motion.div
-                    key={index}
-                    className={`result-item ${result.success ? 'success' : 'error'}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    {result.success ? (
-                      <>
-                        <img
-                          src={window.location.origin + result.data.src}
-                          alt={result.filename}
-                          className="result-thumbnail"
-                        />
-                        <div className="result-info">
-                          <div className="result-filename">{result.filename}</div>
-                          <div className="result-url-group">
-                            <input
-                              type="text"
-                              value={window.location.origin + result.data.src}
-                              readOnly
-                              onClick={(e) => e.target.select()}
-                              className="result-url-input"
-                            />
-                            <button
-                              className="btn-icon"
-                              onClick={() => copyToClipboard(window.location.origin + result.data.src)}
-                              title="复制链接"
-                            >
-                              <HiOutlineDocumentDuplicate />
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="error-icon-wrapper">
-                          <HiOutlineX />
-                        </div>
-                        <div className="result-info">
-                          <div className="result-filename">{result.filename}</div>
-                          <div className="error-message">{result.error}</div>
-                        </div>
-                        <button
-                          className="btn-icon retry-btn"
-                          onClick={() => retryFailedImage(index)}
-                          title="重试"
-                        >
-                          <HiOutlineRefresh />
-                        </button>
-                      </>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* 操作按钮 */}
-            <div className="result-footer">
-              <button className="btn btn-primary" onClick={handleUploadAgain}>
-                <HiOutlineCloudUpload />
-                继续上传
+            <div className="flex gap-2">
+              <button onClick={exportMetadata} className="btn-doodle text-sm py-1 px-3 flex items-center gap-1" title="Export JSON">
+                <DownloadSimple /> JSON
+              </button>
+              <button onClick={copyAllUrls} className="btn-doodle text-sm py-1 px-3 flex items-center gap-1" title="Copy Links">
+                <LinkIcon /> Links
+              </button>
+              <button onClick={copyMarkdownList} className="btn-doodle text-sm py-1 px-3 flex items-center gap-1" title="Copy Markdown">
+                <FileMd /> MD
               </button>
             </div>
-          </motion.div>
-        )}
-      </section>
-    </motion.div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {uploadResults.map((result, index) => (
+              <div 
+                key={index} 
+                className={`
+                  bg-white p-3 shadow-sketch border border-gray-200 relative transition-transform hover:scale-105 hover:z-10
+                  ${index % 2 === 0 ? 'rotate-slight-1' : 'rotate-slight-n2'}
+                `}
+              >
+                {/* Visual Tape */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-white/40 backdrop-blur-sm -rotate-2 shadow-tape"></div>
+                
+                {result.success ? (
+                  <>
+                    <div className="aspect-video bg-gray-50 overflow-hidden mb-3 border border-gray-100">
+                      <img
+                        src={window.location.origin + result.data.src}
+                        alt={result.filename}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                       <input 
+                         type="text" 
+                         value={window.location.origin + result.data.src} 
+                         readOnly 
+                         className="input-hand text-sm flex-1"
+                         onClick={(e) => e.target.select()}
+                       />
+                       <button onClick={() => copyToClipboard(window.location.origin + result.data.src)} className="text-pencil hover:text-marker-blue transition-colors">
+                         <Copy size={24} />
+                       </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-4 text-center text-red-500">
+                    <X size={32} className="mx-auto mb-2" />
+                    <p>{result.filename} Failed</p>
+                    <p className="text-sm">{result.error}</p>
+                    <button onClick={() => retryFailedImage(index)} className="mt-2 text-pencil underline">Retry</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <button 
+              className="btn-primary text-2xl px-8 py-3 rotate-slight-n1" 
+              onClick={() => { setUploadResults([]); }}
+            >
+              <CloudArrowUp className="inline mr-2" />
+              Upload More
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,42 +1,24 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
-import { validatePassword } from '@/utils/validation';
 import toast from 'react-hot-toast';
 import {
-  HiOutlineCog,
-  HiOutlineColorSwatch,
-  HiOutlineSun,
-  HiOutlineMoon,
-  HiOutlineBell,
-  HiOutlineCloudUpload,
-  HiOutlineShieldCheck,
-  HiOutlineLockClosed,
-  HiOutlineExclamation,
-  HiOutlineTrash,
-  HiOutlineCheck,
-} from 'react-icons/hi';
-import './Settings.css';
+  Gear,
+  Bell,
+  CloudArrowUp,
+  ShieldCheck,
+  Warning,
+  CheckSquare,
+  Square,
+  LockKey
+} from '@phosphor-icons/react';
 
-/**
- * 设置页面
- */
 const SettingsPage = () => {
-  const { theme, toggleTheme } = useThemeStore();
-  const { user, changePassword, logout } = useAuthStore();
-
-  // 密码修改
+  const { changePassword } = useAuthStore();
+  
   const [showPasswordSection, setShowPasswordSection] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // 账户设置
   const [settings, setSettings] = useState({
     emailNotifications: true,
     uploadNotifications: true,
@@ -45,352 +27,197 @@ const SettingsPage = () => {
     defaultPrivacy: 'public',
   });
 
-  // 处理密码输入
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
-    if (passwordErrors[name]) {
-      setPasswordErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  // 验证密码
-  const validatePasswordForm = () => {
-    const errors = {};
-
-    if (!passwordData.currentPassword) {
-      errors.currentPassword = '请输入当前密码';
-    }
-
-    const newPasswordValidation = validatePassword(passwordData.newPassword);
-    if (!newPasswordValidation.isValid) {
-      errors.newPassword = newPasswordValidation.errors[0];
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      errors.confirmPassword = '两次输入的密码不一致';
-    }
-
-    setPasswordErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // 提交密码修改
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validatePasswordForm()) {
-      return;
-    }
+    if (!passwordData.currentPassword) return toast.error('Current password needed!');
+    if (passwordData.newPassword.length < 6) return toast.error('New password too short!');
+    if (passwordData.newPassword !== passwordData.confirmPassword) return toast.error('Passwords mismatch!');
 
     setIsChangingPassword(true);
-
     try {
-      const result = await changePassword(
-        passwordData.currentPassword,
-        passwordData.newPassword
-      );
-
+      const result = await changePassword(passwordData.currentPassword, passwordData.newPassword);
       if (result.success) {
-        toast.success('密码修改成功');
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
+        toast.success('Secret code changed!');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setShowPasswordSection(false);
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('修改失败，请重试');
+      toast.error('Failed to change...');
     } finally {
       setIsChangingPassword(false);
     }
   };
 
-  // 处理设置变化
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
-    toast.success('设置已保存');
+    toast.success('Checkbox marked!');
   };
 
-  // 注销账户
   const handleDeleteAccount = () => {
-    const confirmed = window.confirm(
-      '确定要注销账户吗？此操作无法撤销，所有数据将被永久删除。'
-    );
-
-    if (confirmed) {
-      const doubleConfirm = window.confirm('请再次确认：真的要删除账户吗？');
-      if (doubleConfirm) {
-        toast.error('账户注销功能暂未开放');
+    if (window.confirm('Tear out all pages and burn the book? (Delete Account)')) {
+      if (window.confirm('Really? There is no going back.')) {
+        toast.error('Cannot burn the book yet (Feature disabled)');
       }
     }
   };
 
+  const ToggleItem = ({ label, description, checked, onChange }) => (
+    <div className="flex items-start gap-3 py-3 border-b border-dashed border-gray-200 last:border-0 cursor-pointer group" onClick={() => onChange(!checked)}>
+      <div className="mt-1 text-pencil group-hover:text-marker-blue transition-colors">
+        {checked ? <CheckSquare size={24} weight="fill" /> : <Square size={24} />}
+      </div>
+      <div>
+        <h4 className="font-hand text-xl font-bold text-pencil">{label}</h4>
+        <p className="font-hand text-sm text-gray-500">{description}</p>
+      </div>
+    </div>
+  );
+
   return (
-    <motion.div
-      className="settings-page"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* 页面头部 */}
-      <div className="settings-header">
-        <h1 className="page-title">
-          <HiOutlineCog />
-          设置
+    <div className="max-w-3xl mx-auto animate-in fade-in duration-500">
+      <div className="mb-8">
+        <h1 className="text-4xl font-hand font-bold text-pencil rotate-slight-n1">
+          <Gear className="inline mr-2 animate-spin-slow" /> 
+          Preferences
         </h1>
-        <p className="page-subtitle">管理您的偏好设置和账户安全</p>
+        <p className="text-gray-400 font-hand mt-1 rotate-slight-1">
+          Tweaking the system...
+        </p>
       </div>
 
-      {/* 设置内容 */}
-      <div className="settings-content">
-        {/* 外观设置 */}
-        <section className="settings-section">
-          <h2 className="section-title">
-            <HiOutlineColorSwatch />
-            外观设置
-          </h2>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>主题模式</h3>
-              <p>选择浅色或深色主题</p>
-            </div>
-            <div className="theme-switcher">
-              <button
-                className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => theme === 'dark' && toggleTheme()}
-              >
-                <HiOutlineSun />
-                浅色
-              </button>
-              <button
-                className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => theme === 'light' && toggleTheme()}
-              >
-                <HiOutlineMoon />
-                深色
-              </button>
-            </div>
-          </div>
-        </section>
+      <div className="bg-white p-8 shadow-sketch border border-gray-200 relative rotate-slight-1 rounded-sm">
+         {/* Tape */}
+         <div className="absolute -top-3 right-1/4 w-24 h-8 bg-white/40 backdrop-blur-sm -rotate-2 shadow-tape"></div>
 
-        {/* 通知设置 */}
-        <section className="settings-section">
-          <h2 className="section-title">
-            <HiOutlineBell />
-            通知设置
-          </h2>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>邮件通知</h3>
-              <p>接收重要更新和活动通知</p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={(e) =>
-                  handleSettingChange('emailNotifications', e.target.checked)
-                }
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>上传通知</h3>
-              <p>图片上传完成后发送通知</p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.uploadNotifications}
-                onChange={(e) =>
-                  handleSettingChange('uploadNotifications', e.target.checked)
-                }
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-        </section>
-
-        {/* 上传设置 */}
-        <section className="settings-section">
-          <h2 className="section-title">
-            <HiOutlineCloudUpload />
-            上传设置
-          </h2>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>自动保存</h3>
-              <p>上传后自动保存到我的图片</p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.autoSave}
-                onChange={(e) => handleSettingChange('autoSave', e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>图片压缩</h3>
-              <p>上传时自动压缩图片以节省空间</p>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.compressImages}
-                onChange={(e) =>
-                  handleSettingChange('compressImages', e.target.checked)
-                }
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>默认隐私</h3>
-              <p>新上传图片的默认可见性</p>
-            </div>
-            <select
-              className="select"
-              value={settings.defaultPrivacy}
-              onChange={(e) => handleSettingChange('defaultPrivacy', e.target.value)}
-            >
-              <option value="public">公开</option>
-              <option value="private">私密</option>
-              <option value="unlisted">不公开列出</option>
-            </select>
-          </div>
-        </section>
-
-        {/* 安全设置 */}
-        <section className="settings-section">
-          <h2 className="section-title">
-            <HiOutlineShieldCheck />
-            安全设置
-          </h2>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>修改密码</h3>
-              <p>定期更换密码以保护账户安全</p>
-            </div>
-            <button
-              className="btn btn-outline"
-              onClick={() => setShowPasswordSection(!showPasswordSection)}
-            >
-              <HiOutlineLockClosed />
-              {showPasswordSection ? '取消' : '修改密码'}
-            </button>
-          </div>
-
-          {/* 密码修改表单 */}
-          {showPasswordSection && (
-            <motion.form
-              className="password-form"
-              onSubmit={handlePasswordSubmit}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <div className="form-group">
-                <label htmlFor="currentPassword">当前密码</label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  name="currentPassword"
-                  className={`input ${passwordErrors.currentPassword ? 'error' : ''}`}
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  placeholder="输入当前密码"
+         <div className="space-y-8">
+            {/* Notifications */}
+            <section>
+              <h2 className="text-2xl font-hand font-bold text-pencil mb-4 border-b-2 border-marker-yellow inline-block pr-4 rotate-slight-n1">
+                <Bell className="inline mr-1" /> Notifications
+              </h2>
+              <div className="space-y-1">
+                <ToggleItem 
+                  label="Email Updates" 
+                  description="Get letters via owl (email)" 
+                  checked={settings.emailNotifications} 
+                  onChange={(v) => handleSettingChange('emailNotifications', v)} 
                 />
-                {passwordErrors.currentPassword && (
-                  <span className="error-message">
-                    {passwordErrors.currentPassword}
-                  </span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="newPassword">新密码</label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  name="newPassword"
-                  className={`input ${passwordErrors.newPassword ? 'error' : ''}`}
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  placeholder="输入新密码"
+                <ToggleItem 
+                  label="Upload Alerts" 
+                  description="Ding when sketch is done" 
+                  checked={settings.uploadNotifications} 
+                  onChange={(v) => handleSettingChange('uploadNotifications', v)} 
                 />
-                {passwordErrors.newPassword && (
-                  <span className="error-message">{passwordErrors.newPassword}</span>
-                )}
               </div>
+            </section>
 
-              <div className="form-group">
-                <label htmlFor="confirmPassword">确认新密码</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  className={`input ${passwordErrors.confirmPassword ? 'error' : ''}`}
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  placeholder="再次输入新密码"
+            {/* Uploads */}
+            <section>
+              <h2 className="text-2xl font-hand font-bold text-pencil mb-4 border-b-2 border-marker-blue inline-block pr-4 rotate-slight-1">
+                <CloudArrowUp className="inline mr-1" /> Sketching
+              </h2>
+              <div className="space-y-1">
+                <ToggleItem 
+                  label="Auto-Save" 
+                  description="Keep sketches in gallery automatically" 
+                  checked={settings.autoSave} 
+                  onChange={(v) => handleSettingChange('autoSave', v)} 
                 />
-                {passwordErrors.confirmPassword && (
-                  <span className="error-message">
-                    {passwordErrors.confirmPassword}
-                  </span>
-                )}
+                <ToggleItem 
+                  label="Squish Images" 
+                  description="Compress to save paper space" 
+                  checked={settings.compressImages} 
+                  onChange={(v) => handleSettingChange('compressImages', v)} 
+                />
+                
+                <div className="flex items-center gap-3 py-3 border-b border-dashed border-gray-200">
+                   <div className="mt-1"><Square size={24} className="opacity-0" /></div>
+                   <div className="flex-1">
+                     <h4 className="font-hand text-xl font-bold text-pencil">Privacy Default</h4>
+                     <select 
+                       className="mt-1 bg-transparent border-b-2 border-dashed border-gray-300 font-hand text-lg focus:border-pencil outline-none w-full max-w-xs"
+                       value={settings.defaultPrivacy}
+                       onChange={(e) => handleSettingChange('defaultPrivacy', e.target.value)}
+                     >
+                       <option value="public">Public (Show everyone)</option>
+                       <option value="private">Private (Diary only)</option>
+                     </select>
+                   </div>
+                </div>
               </div>
+            </section>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isChangingPassword}
-              >
-                {isChangingPassword ? (
-                  <>
-                    <div className="btn-spinner"></div>
-                    修改中...
-                  </>
-                ) : (
-                  <>
-                    <HiOutlineCheck />
-                    确认修改
-                  </>
-                )}
-              </button>
-            </motion.form>
-          )}
-        </section>
+            {/* Security */}
+            <section>
+              <h2 className="text-2xl font-hand font-bold text-pencil mb-4 border-b-2 border-marker-pink inline-block pr-4 rotate-slight-n1">
+                <ShieldCheck className="inline mr-1" /> Security
+              </h2>
+              
+              {!showPasswordSection ? (
+                <button 
+                  onClick={() => setShowPasswordSection(true)}
+                  className="btn-doodle w-full text-left flex justify-between items-center"
+                >
+                  <span>Change Secret Code</span>
+                  <LockKey />
+                </button>
+              ) : (
+                <form onSubmit={handlePasswordSubmit} className="bg-gray-50 p-4 border border-dashed border-gray-300 rounded relative">
+                   <button 
+                     type="button" 
+                     onClick={() => setShowPasswordSection(false)}
+                     className="absolute top-2 right-2 text-gray-400 hover:text-pencil"
+                   >
+                     Cancel
+                   </button>
+                   <div className="space-y-3">
+                     <input 
+                       type="password" 
+                       name="currentPassword" 
+                       placeholder="Old Code" 
+                       className="input-hand bg-white"
+                       value={passwordData.currentPassword}
+                       onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                     />
+                     <input 
+                       type="password" 
+                       name="newPassword" 
+                       placeholder="New Code" 
+                       className="input-hand bg-white"
+                       value={passwordData.newPassword}
+                       onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                     />
+                     <input 
+                       type="password" 
+                       name="confirmPassword" 
+                       placeholder="Repeat New Code" 
+                       className="input-hand bg-white"
+                       value={passwordData.confirmPassword}
+                       onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                     />
+                     <button type="submit" disabled={isChangingPassword} className="btn-primary w-full mt-2">
+                       {isChangingPassword ? 'Updating...' : 'Update Code'}
+                     </button>
+                   </div>
+                </form>
+              )}
+            </section>
 
-        {/* 危险区域 */}
-        <section className="settings-section danger-section">
-          <h2 className="section-title">
-            <HiOutlineExclamation />
-            危险区域
-          </h2>
-          <div className="setting-item">
-            <div className="setting-info">
-              <h3>注销账户</h3>
-              <p>永久删除您的账户��所有数据</p>
-            </div>
-            <button className="btn btn-danger" onClick={handleDeleteAccount}>
-              <HiOutlineTrash />
-              注销账户
-            </button>
-          </div>
-        </section>
+            {/* Danger Zone */}
+            <section className="pt-8">
+               <button 
+                 onClick={handleDeleteAccount}
+                 className="w-full border-2 border-dashed border-red-200 text-red-400 font-hand text-xl py-2 hover:bg-red-50 hover:text-red-500 hover:border-red-400 transition-all rotate-slight-1"
+               >
+                 <Warning className="inline mb-1 mr-2" />
+                 Burn this Diary (Delete Account)
+               </button>
+            </section>
+         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

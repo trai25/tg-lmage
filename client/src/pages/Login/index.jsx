@@ -1,145 +1,85 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
-import { isValidEmail } from '@/utils/validation';
-import './Login.css';
 
-/**
- * 登录页面
- */
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  });
-  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({ username: '', password: '' });
 
-  // 处理输入变化
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // 清除错误
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
-  };
-
-  // 验证表单
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.username.trim()) {
-      newErrors.username = '请输入用户名或邮箱';
-    }
-
-    if (!formData.password) {
-      newErrors.password = '请输入密码';
-    } else if (formData.password.length < 6) {
-      newErrors.password = '密码长度至少为6位';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // 处理提交
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
+    if (!formData.username || !formData.password) {
+      toast.error('Please fill in your secret code!');
       return;
     }
 
     setLoading(true);
-
     try {
-      const result = await login({
-        username: formData.username,
-        password: formData.password,
-      });
-
+      const result = await login(formData);
       if (result.success) {
-        toast.success('登录成功！');
+        toast.success('Welcome back!');
         navigate('/dashboard');
       } else {
         toast.error(result.error);
       }
     } catch (error) {
-      toast.error('登录失败，请重试');
+      toast.error('Login failed...');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="login-page"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="login-header">
-        <h1>欢迎回来</h1>
-        <p>登录您的账户继续使用</p>
-      </div>
-
-      <form className="login-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="username">用户名或邮箱</label>
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-n1">
+            Who are you?
+          </label>
           <input
             type="text"
-            id="username"
             name="username"
-            placeholder="请输入用户名或邮箱"
+            placeholder="Username or Email"
+            className="input-hand"
             value={formData.username}
-            onChange={handleChange}
+            onChange={(e) => setFormData({...formData, username: e.target.value})}
             disabled={loading}
           />
-          {errors.username && (
-            <span className="form-error">{errors.username}</span>
-          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">密码</label>
+        <div className="space-y-2">
+          <label className="block text-xl font-hand font-bold text-pencil ml-1 rotate-slight-1">
+            Secret Password
+          </label>
           <input
             type="password"
-            id="password"
             name="password"
-            placeholder="请输入密码"
+            placeholder="Shhh..."
+            className="input-hand"
             value={formData.password}
-            onChange={handleChange}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
             disabled={loading}
           />
-          {errors.password && (
-            <span className="form-error">{errors.password}</span>
-          )}
         </div>
 
-        <div className="form-actions">
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? '登录中...' : '登录'}
-          </button>
-        </div>
+        <button 
+          type="submit" 
+          className="btn-primary w-full mt-8 text-2xl font-bold py-3 rotate-slight-n1 disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? 'Opening...' : 'Open Diary'}
+        </button>
       </form>
 
-      <div className="form-footer">
-        <p>
-          还没有账号？ <Link to="/register">立即注册</Link>
+      <div className="mt-8 text-center">
+        <p className="font-hand text-lg text-gray-500">
+          First time here? <Link to="/register" className="text-marker-blue underline decoration-wavy font-bold hover:text-blue-500">Get a Sketchbook</Link>
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

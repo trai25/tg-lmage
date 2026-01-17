@@ -1,34 +1,25 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useImageStore } from '@/store/imageStore';
 import { useFavoriteStore } from '@/store/favoriteStore';
-import { useAuthStore } from '@/store/authStore';
-import { formatFileSize, formatDate } from '@/utils/format';
 import toast from 'react-hot-toast';
 import {
-  HiOutlinePhotograph,
-  HiOutlineCloudUpload,
-  HiOutlineViewGrid,
-  HiOutlineViewList,
-  HiOutlineCheckCircle,
-  HiCheckCircle,
-  HiOutlineTrash,
-  HiOutlineLink,
-  HiOutlineHeart,
-  HiHeart,
-  HiOutlineDocument,
-  HiOutlineClock,
-  HiOutlineCollection,
-} from 'react-icons/hi';
-import './Dashboard.css';
+  Image as ImageIcon,
+  CloudArrowUp,
+  SquaresFour,
+  List,
+  CheckCircle,
+  Trash,
+  XCircle,
+  Funnel,
+  SortAscending,
+  SortDescending,
+  File
+} from '@phosphor-icons/react';
+import ImageCard from '@/components/ImageCard';
 
-/**
- * 仪表板页面 - 图片管理中心
- */
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const {
     images,
     isLoading,
@@ -47,16 +38,13 @@ const DashboardPage = () => {
   } = useImageStore();
 
   const { favorites, toggleFavorite } = useFavoriteStore();
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
 
-  // 加载图片列表
   useEffect(() => {
     fetchImages();
   }, [fetchImages]);
 
-  // 处理删除单个图片
   const handleDeleteClick = (image) => {
     setImageToDelete(image);
     setShowDeleteModal(true);
@@ -64,10 +52,9 @@ const DashboardPage = () => {
 
   const confirmDelete = async () => {
     if (!imageToDelete) return;
-
     const result = await deleteImage(imageToDelete.id);
     if (result.success) {
-      toast.success('图片已删除');
+      toast.success('Sketch erased!');
       setShowDeleteModal(false);
       setImageToDelete(null);
     } else {
@@ -75,266 +62,148 @@ const DashboardPage = () => {
     }
   };
 
-  // 批量删除
   const handleBatchDelete = async () => {
     if (selectedImages.size === 0) return;
-
-    const confirmed = window.confirm(
-      `确定要删除选中的 ${selectedImages.size} 张图片吗？`
-    );
-
-    if (confirmed) {
+    if (window.confirm(`Erase ${selectedImages.size} sketches?`)) {
       const result = await deleteImages(Array.from(selectedImages));
       if (result.success) {
-        toast.success(`已删除 ${selectedImages.size} 张图片`);
+        toast.success(`Erased ${selectedImages.size} sketches.`);
       } else {
         toast.error(result.error);
       }
     }
   };
 
-  // 复制链接
   const copyImageUrl = (image) => {
-    const url = window.location.origin + image.src;
-    navigator.clipboard.writeText(url);
-    toast.success('链接已复制');
+    navigator.clipboard.writeText(window.location.origin + image.src);
+    toast.success('Link copied to clipboard!');
   };
 
-  // 检查是否收藏
   const isFavorite = (imageId) => favorites.has(imageId);
 
   return (
-    <motion.div
-      className="dashboard-page"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* 页面头部 */}
-      <div className="dashboard-header">
-        <div className="header-left">
-          <h1 className="page-title">
-            <HiOutlinePhotograph />
-            我的图片
+    <div className="animate-in fade-in duration-500">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b-2 border-dashed border-gray-200 pb-4">
+        <div>
+          <h1 className="text-4xl font-hand font-bold text-pencil rotate-slight-n1">
+            My Sketches
           </h1>
-          <p className="page-subtitle">
-            共 {images.length} 张图片
-            {isSelectionMode && ` · 已选择 ${selectedImages.size} 张`}
+          <p className="text-gray-400 font-hand mt-1">
+            {images.length} memories collected
           </p>
         </div>
 
-        <div className="header-right">
-          <button
-            className="btn btn-outline"
-            onClick={() => navigate('/')}
-          >
-            <HiOutlineCloudUpload />
-            上传图片
-          </button>
-        </div>
-      </div>
-
-      {/* 工具栏 */}
-      <div className="dashboard-toolbar">
-        <div className="toolbar-left">
-          {/* 视图切换 */}
-          <div className="view-switcher">
-            <button
-              className={`view-btn ${filters.viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="网格视图"
-            >
-              <HiOutlineViewGrid />
-            </button>
-            <button
-              className={`view-btn ${filters.viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="列表视图"
-            >
-              <HiOutlineViewList />
-            </button>
-          </div>
-
-          {/* 排序 */}
-          <select
-            className="sort-select"
-            value={filters.sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="newest">最新上传</option>
-            <option value="oldest">最早上传</option>
-            <option value="largest">文件最大</option>
-            <option value="smallest">文件最小</option>
-            <option value="name">文件名</option>
-          </select>
-        </div>
-
-        <div className="toolbar-right">
-          {/* 选择模式 */}
+        <div className="flex gap-2 mt-4 md:mt-0">
           {isSelectionMode ? (
-            <>
-              <button className="btn btn-sm" onClick={toggleSelectAll}>
-                <HiOutlineCollection />
-                全选
-              </button>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={handleBatchDelete}
-                disabled={selectedImages.size === 0}
-              >
-                <HiOutlineTrash />
-                删除选中
-              </button>
-              <button
-                className="btn btn-sm btn-outline"
-                onClick={() => {
-                  toggleSelectionMode();
-                  clearSelection();
-                }}
-              >
-                取消
-              </button>
-            </>
+             <div className="flex gap-2 bg-yellow-50 p-2 rounded-lg border border-marker-yellow rotate-1">
+                <button onClick={toggleSelectAll} className="btn-doodle text-sm py-1 px-2">
+                   All
+                </button>
+                <button onClick={handleBatchDelete} className="btn-doodle text-sm py-1 px-2 text-red-500 hover:bg-red-50">
+                   <Trash size={18} />
+                </button>
+                <button onClick={() => { toggleSelectionMode(); clearSelection(); }} className="btn-doodle text-sm py-1 px-2">
+                   <XCircle size={18} />
+                </button>
+             </div>
           ) : (
-            <button className="btn btn-sm btn-outline" onClick={toggleSelectionMode}>
-              <HiOutlineCheckCircle />
-              批量操作
-            </button>
+             <>
+               <button 
+                 onClick={toggleSelectionMode} 
+                 className="btn-doodle flex items-center gap-1 text-sm py-1 px-3"
+                 title="Select Multiple"
+               >
+                 <CheckCircle size={20} /> Select
+               </button>
+               <button 
+                 onClick={() => setSortBy(filters.sortBy === 'newest' ? 'oldest' : 'newest')} 
+                 className="btn-doodle flex items-center gap-1 text-sm py-1 px-3"
+                 title="Sort"
+               >
+                 {filters.sortBy === 'newest' ? <SortDescending size={20} /> : <SortAscending size={20} />}
+               </button>
+               <div className="flex bg-gray-100 p-1 rounded-md rotate-slight-1">
+                 <button 
+                   onClick={() => setViewMode('grid')} 
+                   className={`p-1 rounded ${filters.viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                 >
+                   <SquaresFour size={20} />
+                 </button>
+                 <button 
+                   onClick={() => setViewMode('list')} 
+                   className={`p-1 rounded ${filters.viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                 >
+                   <List size={20} />
+                 </button>
+               </div>
+             </>
           )}
         </div>
       </div>
 
-      {/* 图片网格/列表 */}
+      {/* Content */}
       {isLoading ? (
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>加载中...</p>
+        <div className="flex justify-center py-20">
+          <div className="animate-bounce text-2xl font-hand text-pencil">Loading sketches...</div>
         </div>
       ) : images.length === 0 ? (
-        <div className="empty-state">
-          <HiOutlinePhotograph className="empty-icon" />
-          <h3>还没有上传图片</h3>
-          <p>点击上传按钮开始使用</p>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
-            <HiOutlineCloudUpload />
-            立即上传
+        <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
+          <ImageIcon size={64} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-2xl font-hand text-gray-500">Page is empty!</h3>
+          <button onClick={() => navigate('/')} className="btn-primary mt-6 rotate-slight-n1">
+            <CloudArrowUp className="inline mr-2" />
+            Start Drawing
           </button>
         </div>
       ) : (
-        <div className={`image-container ${filters.viewMode}`}>
+        <div className={`
+          ${filters.viewMode === 'grid' 
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8' 
+            : 'space-y-4'
+          }
+        `}>
           {images.map((image) => (
-            <motion.div
-              key={image.id}
-              className={`image-card ${
-                selectedImages.has(image.id) ? 'selected' : ''
-              }`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* 选择框 */}
-              {isSelectionMode && (
-                <div
-                  className="selection-checkbox"
-                  onClick={() => toggleImageSelection(image.id)}
-                >
-                  {selectedImages.has(image.id) ? (
-                    <HiCheckCircle />
-                  ) : (
-                    <HiOutlineCheckCircle />
-                  )}
-                </div>
-              )}
-
-              {/* 图片预览 */}
-              <div className="image-preview">
-                <img src={image.src} alt={image.fileName} loading="lazy" />
-                <div className="image-overlay">
-                  <button
-                    className="overlay-btn"
-                    onClick={() => copyImageUrl(image)}
-                    title="复制链接"
-                  >
-                    <HiOutlineLink />
-                  </button>
-                  <button
-                    className="overlay-btn"
-                    onClick={() => toggleFavorite(image.id)}
-                    title={isFavorite(image.id) ? '取消收藏' : '收藏'}
-                  >
-                    {isFavorite(image.id) ? <HiHeart /> : <HiOutlineHeart />}
-                  </button>
-                  <button
-                    className="overlay-btn danger"
-                    onClick={() => handleDeleteClick(image)}
-                    title="删除"
-                  >
-                    <HiOutlineTrash />
-                  </button>
-                </div>
+            filters.viewMode === 'grid' ? (
+              <ImageCard
+                key={image.id}
+                image={image}
+                isSelected={selectedImages.has(image.id)}
+                isFavorite={isFavorite(image.id)}
+                showSelection={isSelectionMode}
+                onSelect={toggleImageSelection}
+                onFavorite={toggleFavorite}
+                onCopy={copyImageUrl}
+                onDelete={handleDeleteClick}
+                onClick={(img) => console.log('View', img)}
+              />
+            ) : (
+              <div key={image.id} className="flex items-center gap-4 bg-white p-4 border-b border-dashed border-gray-200">
+                 <img src={image.src} className="w-16 h-16 object-cover border border-gray-200" />
+                 <div className="flex-1">
+                    <div className="font-hand font-bold text-lg">{image.fileName}</div>
+                 </div>
               </div>
-
-              {/* 图片信息 */}
-              <div className="image-info">
-                <p className="image-name" title={image.fileName}>
-                  {image.fileName}
-                </p>
-                <div className="image-meta">
-                  <span>
-                    <HiOutlineDocument />
-                    {formatFileSize(image.fileSize)}
-                  </span>
-                  <span>
-                    <HiOutlineClock />
-                    {formatDate(image.uploadTime)}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+            )
           ))}
         </div>
       )}
 
-      {/* 删除确认模态框 */}
+      {/* Delete Modal */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <motion.div
-            className="modal"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h3>
-                <HiOutlineTrash />
-                确认删除
-              </h3>
-            </div>
-            <div className="modal-body">
-              <p>确定要删除这张图片吗？此操作无法撤销。</p>
-              {imageToDelete && (
-                <div className="delete-preview">
-                  <img src={imageToDelete.src} alt={imageToDelete.fileName} />
-                  <p>{imageToDelete.fileName}</p>
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-outline"
-                onClick={() => setShowDeleteModal(false)}
-              >
-                取消
-              </button>
-              <button className="btn btn-danger" onClick={confirmDelete}>
-                <HiOutlineTrash />
-                确认删除
-              </button>
-            </div>
-          </motion.div>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white p-8 max-w-sm w-full shadow-sketch rotate-slight-1 relative" onClick={e => e.stopPropagation()}>
+             <div className="tape-top"></div>
+             <h3 className="text-2xl font-hand font-bold text-red-500 mb-4 text-center">Tear this page?</h3>
+             <p className="text-center font-hand text-gray-500 mb-6">You can't tape it back together.</p>
+             <div className="flex gap-4 justify-center">
+                <button onClick={() => setShowDeleteModal(false)} className="btn-doodle">Keep it</button>
+                <button onClick={confirmDelete} className="btn-doodle bg-red-100 hover:bg-red-200 text-red-600 border-red-200">Yes, Erase</button>
+             </div>
+          </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,21 +1,13 @@
-import { motion } from 'framer-motion';
-import { formatFileSize, formatDate } from '@/utils/format';
 import PropTypes from 'prop-types';
+import { formatFileSize, formatDate } from '@/utils/format';
 import {
-  HiOutlineCheckCircle,
-  HiCheckCircle,
-  HiHeart,
-  HiOutlineHeart,
-  HiOutlineLink,
-  HiOutlineTrash,
-  HiOutlineDocument,
-  HiOutlineClock,
-} from 'react-icons/hi';
-import './ImageCard.css';
+  Heart,
+  Copy,
+  Trash,
+  CheckCircle,
+  Circle
+} from '@phosphor-icons/react';
 
-/**
- * 图片卡片组件 - 可复用的图片展示卡片
- */
 const ImageCard = ({
   image,
   isSelected = false,
@@ -27,141 +19,89 @@ const ImageCard = ({
   onDelete,
   onClick,
 }) => {
-  // 处理卡片点击
-  const handleCardClick = (e) => {
-    // 如果点击的是操作按钮，不触发卡片点击
-    if (e.target.closest('.image-overlay') || e.target.closest('.selection-checkbox')) {
-      return;
-    }
-    onClick?.(image);
-  };
-
   return (
-    <motion.div
-      className={`image-card ${isSelected ? 'selected' : ''}`}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
-      onClick={handleCardClick}
+    <div
+      className={`
+        bg-white p-3 pb-8 shadow-sketch border border-gray-200 relative transition-transform duration-300 hover:z-20 hover:scale-105 hover:rotate-0 cursor-pointer
+        ${isSelected ? 'ring-2 ring-marker-blue rotate-0' : 'rotate-slight-1 even:rotate-slight-n1'}
+      `}
+      onClick={(e) => {
+        if (!e.target.closest('button')) onClick?.(image);
+      }}
     >
-      {/* 选择框 */}
+      {/* Tape */}
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-white/40 backdrop-blur-sm -rotate-2 shadow-tape z-10"></div>
+
+      {/* Selection Checkbox (Sticker Style) */}
       {showSelection && (
-        <div
-          className="selection-checkbox"
+        <button
+          className="absolute top-2 left-2 z-30 text-pencil hover:text-marker-blue bg-white rounded-full"
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(image.id);
           }}
         >
-          {isSelected ? <HiCheckCircle /> : <HiOutlineCheckCircle />}
-        </div>
+          {isSelected ? <CheckCircle size={32} weight="fill" className="text-marker-blue" /> : <Circle size={32} />}
+        </button>
       )}
 
-      {/* 收藏标记 */}
-      {isFavorite && !showSelection && (
-        <div className="favorite-badge">
-          <HiHeart />
-        </div>
-      )}
-
-      {/* 图片预览 */}
-      <div className="image-preview">
-        <img src={image.src} alt={image.fileName} loading="lazy" />
+      {/* Image Area */}
+      <div className="aspect-square bg-gray-50 overflow-hidden border border-gray-100 relative group">
+        <img 
+          src={image.src} 
+          alt={image.fileName} 
+          loading="lazy" 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+        />
         
-        {/* 悬浮操作层 */}
-        <div className="image-overlay">
-          <div className="overlay-actions">
-            {onCopy && (
-              <button
-                className="overlay-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCopy(image);
-                }}
-                title="复制链接"
-              >
-                <HiOutlineLink />
-              </button>
-            )}
-            
-            {onFavorite && (
-              <button
-                className="overlay-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFavorite(image.id);
-                }}
-                title={isFavorite ? '取消收藏' : '收藏'}
-              >
-                {isFavorite ? <HiHeart /> : <HiOutlineHeart />}
-              </button>
-            )}
-            
-            {onDelete && (
-              <button
-                className="overlay-btn danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(image);
-                }}
-                title="删除"
-              >
-                <HiOutlineTrash />
-              </button>
-            )}
-          </div>
+        {/* Hover Actions (Stickers) */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+           {onCopy && (
+             <button
+               className="bg-white p-2 rounded-full shadow-lg hover:bg-marker-yellow transition-transform hover:rotate-12 hover:scale-110"
+               onClick={(e) => { e.stopPropagation(); onCopy(image); }}
+               title="Copy Link"
+             >
+               <Copy size={20} className="text-pencil" />
+             </button>
+           )}
+           {onFavorite && (
+             <button
+               className="bg-white p-2 rounded-full shadow-lg hover:bg-marker-pink transition-transform hover:-rotate-12 hover:scale-110"
+               onClick={(e) => { e.stopPropagation(); onFavorite(image.id); }}
+               title="Love it"
+             >
+               <Heart size={20} weight={isFavorite ? "fill" : "regular"} className={isFavorite ? "text-red-500" : "text-pencil"} />
+             </button>
+           )}
+           {onDelete && (
+             <button
+               className="bg-white p-2 rounded-full shadow-lg hover:bg-red-100 transition-transform hover:rotate-6 hover:scale-110"
+               onClick={(e) => { e.stopPropagation(); onDelete(image); }}
+               title="Throw away"
+             >
+               <Trash size={20} className="text-red-500" />
+             </button>
+           )}
         </div>
       </div>
 
-      {/* 图片信息 */}
-      <div className="image-info">
-        <p className="image-name" title={image.fileName}>
+      {/* Caption */}
+      <div className="mt-3 px-1">
+        <p className="font-hand text-xl text-pencil truncate leading-tight" title={image.fileName}>
           {image.fileName}
         </p>
-        <div className="image-meta">
-          <span>
-            <HiOutlineDocument />
-            {formatFileSize(image.fileSize)}
-          </span>
-          <span>
-            <HiOutlineClock />
-            {formatDate(image.uploadTime)}
-          </span>
+        <div className="flex justify-between items-center mt-1 text-gray-400 text-xs font-hand">
+           <span>{formatFileSize(image.fileSize)}</span>
+           <span>{formatDate(image.uploadTime)}</span>
         </div>
-        
-        {/* 标签 */}
-        {image.tags && image.tags.length > 0 && (
-          <div className="image-tags">
-            {image.tags.slice(0, 3).map((tag) => (
-              <span key={tag.id} className="tag" style={{ backgroundColor: tag.color }}>
-                {tag.name}
-              </span>
-            ))}
-            {image.tags.length > 3 && (
-              <span className="tag-more">+{image.tags.length - 3}</span>
-            )}
-          </div>
-        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 ImageCard.propTypes = {
-  image: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    src: PropTypes.string.isRequired,
-    fileName: PropTypes.string.isRequired,
-    fileSize: PropTypes.number.isRequired,
-    uploadTime: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    tags: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        name: PropTypes.string,
-        color: PropTypes.string,
-      })
-    ),
-  }).isRequired,
+  image: PropTypes.object.isRequired,
   isSelected: PropTypes.bool,
   isFavorite: PropTypes.bool,
   showSelection: PropTypes.bool,

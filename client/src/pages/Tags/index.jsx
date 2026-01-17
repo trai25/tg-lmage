@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useTagStore } from '@/store/tagStore';
 import toast from 'react-hot-toast';
 import {
-  HiOutlineTag,
-  HiOutlinePlus,
-  HiOutlinePencil,
-  HiOutlineTrash,
-  HiOutlineCheck,
-} from 'react-icons/hi';
-import './Tags.css';
+  Tag,
+  Plus,
+  Pencil,
+  Trash,
+  Check,
+  X,
+  Palette
+} from '@phosphor-icons/react';
 
-/**
- * 标签管理页面
- */
 const TagsPage = () => {
   const { tags, isLoading, fetchTags, createTag, updateTag, deleteTag } = useTagStore();
   
@@ -21,33 +18,27 @@ const TagsPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
   const [tagName, setTagName] = useState('');
-  const [tagColor, setTagColor] = useState('#3b82f6');
+  const [tagColor, setTagColor] = useState('#fef08a'); // Default Yellow
 
-  // 加载标签列表
   useEffect(() => {
     fetchTags();
   }, [fetchTags]);
 
-  // 创建标签
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!tagName.trim()) {
-      toast.error('请输入标签名称');
-      return;
-    }
+    if (!tagName.trim()) return toast.error('Tag needs a name!');
 
     const result = await createTag({ name: tagName, color: tagColor });
     if (result.success) {
-      toast.success('标签创建成功');
+      toast.success('Sticky note added!');
       setShowCreateModal(false);
       setTagName('');
-      setTagColor('#3b82f6');
+      setTagColor('#fef08a');
     } else {
       toast.error(result.error);
     }
   };
 
-  // 编辑标签
   const handleEdit = (tag) => {
     setEditingTag(tag);
     setTagName(tag.name);
@@ -57,230 +48,159 @@ const TagsPage = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!tagName.trim()) {
-      toast.error('请输入标签名称');
-      return;
-    }
+    if (!tagName.trim()) return toast.error('Tag needs a name!');
 
     const result = await updateTag(editingTag.id, { name: tagName, color: tagColor });
     if (result.success) {
-      toast.success('标签更新成功');
+      toast.success('Note rewritten!');
       setShowEditModal(false);
       setEditingTag(null);
       setTagName('');
-      setTagColor('#3b82f6');
     } else {
       toast.error(result.error);
     }
   };
 
-  // 删除标签
   const handleDelete = async (tagId) => {
-    const confirmed = window.confirm('确定要删除这个标签吗？');
-    if (!confirmed) return;
-
-    const result = await deleteTag(tagId);
-    if (result.success) {
-      toast.success('标签已删除');
-    } else {
-      toast.error(result.error);
+    if (window.confirm('Crumple up this note and throw it away?')) {
+      const result = await deleteTag(tagId);
+      if (result.success) {
+        toast.success('Note trashed.');
+      } else {
+        toast.error(result.error);
+      }
     }
   };
+
+  const TagModal = ({ title, onSubmit, onClose }) => (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div 
+        className="bg-white p-6 max-w-sm w-full shadow-sketch rotate-slight-1 relative border border-gray-200" 
+        onClick={e => e.stopPropagation()}
+      >
+         <div className="tape-top"></div>
+         
+         <h3 className="text-2xl font-hand font-bold text-pencil mb-6 text-center">{title}</h3>
+         
+         <form onSubmit={onSubmit} className="space-y-4">
+           <div>
+             <label className="block font-hand text-lg text-gray-500 mb-1">Label</label>
+             <input
+               type="text"
+               className="input-hand w-full text-xl"
+               value={tagName}
+               onChange={(e) => setTagName(e.target.value)}
+               placeholder="Important Stuff"
+               autoFocus
+             />
+           </div>
+           <div>
+             <label className="block font-hand text-lg text-gray-500 mb-1">Color Marker</label>
+             <div className="flex gap-2 flex-wrap">
+               {['#fef08a', '#fbcfe8', '#bae6fd', '#bbf7d0', '#e9d5ff'].map(color => (
+                 <button
+                   key={color}
+                   type="button"
+                   onClick={() => setTagColor(color)}
+                   className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${tagColor === color ? 'border-pencil scale-110 shadow-sm' : 'border-transparent'}`}
+                   style={{ backgroundColor: color }}
+                 />
+               ))}
+               <input 
+                 type="color" 
+                 value={tagColor} 
+                 onChange={(e) => setTagColor(e.target.value)}
+                 className="w-8 h-8 opacity-0 absolute"
+               />
+               <button type="button" className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-pencil hover:border-pencil">
+                 <Palette size={16} />
+               </button>
+             </div>
+           </div>
+           
+           <div className="flex justify-end gap-3 pt-4 border-t-2 border-dashed border-gray-100 mt-6">
+             <button type="button" onClick={onClose} className="btn-doodle text-sm px-4">
+               Cancel
+             </button>
+             <button type="submit" className="btn-primary text-sm px-4">
+               Save Note
+             </button>
+           </div>
+         </form>
+      </div>
+    </div>
+  );
 
   return (
-    <motion.div
-      className="tags-page"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* 页面头部 */}
-      <div className="tags-header">
-        <div className="header-left">
-          <h1 className="page-title">
-            <HiOutlineTag />
-            标签管理
+    <div className="animate-in fade-in duration-500">
+      <div className="flex justify-between items-end mb-8 border-b-2 border-dashed border-gray-200 pb-4">
+        <div>
+          <h1 className="text-4xl font-hand font-bold text-pencil rotate-slight-1">
+            <Tag className="inline mr-2" weight="duotone" /> Tags
           </h1>
-          <p className="page-subtitle">共 {tags.length} 个标签</p>
+          <p className="text-gray-400 font-hand mt-1 rotate-slight-n1">
+            Sticky notes for your brain
+          </p>
         </div>
-        <div className="header-right">
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <HiOutlinePlus />
-            创建标签
-          </button>
-        </div>
+        <button onClick={() => setShowCreateModal(true)} className="btn-primary flex items-center gap-1 rotate-1">
+          <Plus size={20} weight="bold" /> New Note
+        </button>
       </div>
 
-      {/* 标签列表 */}
       {isLoading ? (
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>加载中...</p>
-        </div>
+        <div className="flex justify-center py-20 font-hand text-xl text-pencil animate-bounce">Checking corkboard...</div>
       ) : tags.length === 0 ? (
-        <div className="empty-state">
-          <HiOutlineTag className="empty-icon" />
-          <h3>还没有标签</h3>
-          <p>创建标签来更好地组织您的图片</p>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <HiOutlinePlus />
-            创建第一个标签
-          </button>
+        <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
+           <Tag size={64} className="mx-auto text-gray-300 mb-4" />
+           <p className="font-hand text-xl text-gray-400">No sticky notes found.</p>
         </div>
       ) : (
-        <div className="tags-grid">
-          {tags.map((tag) => (
-            <motion.div
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+          {tags.map((tag, index) => (
+            <div
               key={tag.id}
-              className="tag-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
+              className={`
+                aspect-square p-4 shadow-sketch relative flex flex-col justify-between transition-transform hover:scale-105 group
+                ${index % 2 === 0 ? 'rotate-1' : '-rotate-1'}
+              `}
+              style={{ backgroundColor: tag.color }}
             >
-              <div className="tag-color" style={{ backgroundColor: tag.color }}></div>
-              <div className="tag-content">
-                <h3 className="tag-name">{tag.name}</h3>
-                <p className="tag-count">{tag.count || 0} 张图片</p>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-black/10 backdrop-blur-sm border-2 border-white/50 shadow-inner"></div> {/* Pushpin */}
+              
+              <div className="mt-4 flex-1 flex flex-col items-center justify-center text-center">
+                 <h3 className="font-hand text-2xl font-bold text-pencil break-words w-full">{tag.name}</h3>
+                 <p className="font-hand text-sm text-pencil/60 mt-1">{tag.count || 0} sketches</p>
               </div>
-              <div className="tag-actions">
-                <button
-                  className="tag-action-btn"
-                  onClick={() => handleEdit(tag)}
-                  title="编辑"
-                >
-                  <HiOutlinePencil />
+
+              <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleEdit(tag)} className="p-2 hover:bg-white/50 rounded-full text-pencil" title="Rewrite">
+                  <Pencil size={20} />
                 </button>
-                <button
-                  className="tag-action-btn danger"
-                  onClick={() => handleDelete(tag.id)}
-                  title="删除"
-                >
-                  <HiOutlineTrash />
+                <button onClick={() => handleDelete(tag.id)} className="p-2 hover:bg-white/50 rounded-full text-red-500" title="Trash">
+                  <Trash size={20} />
                 </button>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* 创建标签模态框 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <motion.div
-            className="modal"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h3>
-                <HiOutlinePlus />
-                创建标签
-              </h3>
-            </div>
-            <form onSubmit={handleCreate}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>标签名称</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={tagName}
-                    onChange={(e) => setTagName(e.target.value)}
-                    placeholder="输入标签名称"
-                    autoFocus
-                  />
-                </div>
-                <div className="form-group">
-                  <label>标签颜色</label>
-                  <input
-                    type="color"
-                    className="color-input"
-                    value={tagColor}
-                    onChange={(e) => setTagColor(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  取消
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  <HiOutlineCheck />
-                  创建
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
+        <TagModal 
+          title="New Sticky Note" 
+          onSubmit={handleCreate} 
+          onClose={() => setShowCreateModal(false)} 
+        />
       )}
 
-      {/* 编辑标签模态框 */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <motion.div
-            className="modal"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h3>
-                <HiOutlinePencil />
-                编辑标签
-              </h3>
-            </div>
-            <form onSubmit={handleUpdate}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>标签名称</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={tagName}
-                    onChange={(e) => setTagName(e.target.value)}
-                    placeholder="输入标签名称"
-                    autoFocus
-                  />
-                </div>
-                <div className="form-group">
-                  <label>标签颜色</label>
-                  <input
-                    type="color"
-                    className="color-input"
-                    value={tagColor}
-                    onChange={(e) => setTagColor(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  取消
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  <HiOutlineCheck />
-                  保存
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
+        <TagModal 
+          title="Rewrite Note" 
+          onSubmit={handleUpdate} 
+          onClose={() => setShowEditModal(false)} 
+        />
       )}
-    </motion.div>
+    </div>
   );
 };
 

@@ -80,7 +80,7 @@ const SettingsPage = () => {
     try {
       const result = await uploadFiles([file]);
       if (result.success && result.data[0]?.success) {
-        const avatarUrl = result.data[0].data.src;
+        const avatarUrl = window.location.origin + result.data[0].data.src;
         const updateResult = await updateAvatar(avatarUrl);
         if (updateResult.success) {
           toast.success('头像已更新！');

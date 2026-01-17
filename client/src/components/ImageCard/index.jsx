@@ -60,6 +60,10 @@ const ImageCard = memo(({
       {/* Tape */}
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-white/40 backdrop-blur-sm -rotate-2 shadow-tape z-10"></div>
 
+      {/* Random doodle marks */}
+      <div className="absolute top-2 right-2 w-8 h-8 border-2 border-dashed border-pencil/20 rounded-full transform rotate-12"></div>
+      <div className="absolute bottom-10 left-2 text-xs text-pencil/30 font-hand transform -rotate-6">✓</div>
+
       {/* Selection Checkbox (Sticker Style) */}
       {showSelection && (
         <button

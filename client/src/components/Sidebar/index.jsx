@@ -37,8 +37,19 @@ const Sidebar = memo(() => {
   return (
     <>
       {/* Desktop Sidebar (The Spine) */}
-      <aside className="hidden md:flex flex-col w-64 h-[calc(100vh-2rem)] sticky top-4 bg-white shadow-sketch rounded-lg rotate-slight-n1 border border-gray-200 z-40">
-        <div className="p-6 border-b-2 border-dashed border-gray-200">
+      <aside className="hidden md:flex flex-col w-64 h-[calc(100vh-2rem)] sticky top-4 bg-white shadow-sketch rounded-lg rotate-slight-n1 border border-gray-200 z-40 relative">
+        {/* Staples decoration */}
+        <div className="absolute top-8 left-2 w-3 h-6 bg-gray-300 rounded-sm shadow-inner transform -rotate-12"></div>
+        <div className="absolute top-24 left-2 w-3 h-6 bg-gray-300 rounded-sm shadow-inner transform rotate-6"></div>
+        <div className="absolute bottom-24 left-2 w-3 h-6 bg-gray-300 rounded-sm shadow-inner transform -rotate-6"></div>
+
+        <div className="p-6 border-b-2 border-dashed border-gray-200 relative">
+          {/* Torn edge effect */}
+          <div className="absolute -right-1 top-0 bottom-0 w-2 bg-white" style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, #f3f4f6 3px, #f3f4f6 6px)',
+            clipPath: 'polygon(0 0, 100% 2%, 0 5%, 100% 8%, 0 11%, 100% 14%, 0 17%, 100% 20%, 0 23%, 100% 26%, 0 29%, 100% 32%, 0 35%, 100% 38%, 0 41%, 100% 44%, 0 47%, 100% 50%, 0 53%, 100% 56%, 0 59%, 100% 62%, 0 65%, 100% 68%, 0 71%, 100% 74%, 0 77%, 100% 80%, 0 83%, 100% 86%, 0 89%, 100% 92%, 0 95%, 100% 98%, 0 100%)'
+          }}></div>
+
           <h1 className="text-3xl font-bold -rotate-2 text-pencil">
             <span className="bg-marker-yellow px-2 transform inline-block">涂鸦</span>
             <br />

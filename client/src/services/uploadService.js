@@ -49,7 +49,7 @@ const uploadSingleFile = async (file, retries = 3) => {
 };
 
 /**
- * 并发池控制器
+ * 并发池控制器（简化版）
  * @param {Array} tasks - 任务数组
  * @param {number} concurrency - 并发数
  * @param {Function} onProgress - 进度回调
@@ -57,34 +57,46 @@ const uploadSingleFile = async (file, retries = 3) => {
  */
 const runWithConcurrency = async (tasks, concurrency, onProgress) => {
   const results = [];
-  const executing = [];
   let completed = 0;
+  let index = 0;
 
-  for (const [index, task] of tasks.entries()) {
-    const promise = task().then(result => {
-      completed++;
-      if (onProgress) {
-        onProgress({
-          completed,
-          total: tasks.length,
-          percent: Math.round((completed / tasks.length) * 100),
-          currentIndex: index,
-          result,
-        });
+  // 执行单个任务
+  const runTask = async () => {
+    while (index < tasks.length) {
+      const currentIndex = index++;
+      const task = tasks[currentIndex];
+      
+      try {
+        const result = await task();
+        results[currentIndex] = result;
+        completed++;
+        
+        if (onProgress) {
+          onProgress({
+            completed,
+            total: tasks.length,
+            percent: Math.round((completed / tasks.length) * 100),
+            currentIndex,
+            result,
+          });
+        }
+      } catch (error) {
+        results[currentIndex] = {
+          success: false,
+          error: error.message || '上传失败'
+        };
+        completed++;
       }
-      return result;
-    });
-
-    results.push(promise);
-    executing.push(promise);
-
-    if (executing.length >= concurrency) {
-      await Promise.race(executing);
-      executing.splice(executing.findIndex(p => p === promise), 1);
     }
-  }
+  };
 
-  return Promise.all(results);
+  // 创建并发池
+  const workers = Array(Math.min(concurrency, tasks.length))
+    .fill(null)
+    .map(() => runTask());
+
+  await Promise.all(workers);
+  return results;
 };
 
 /**

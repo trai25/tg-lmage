@@ -16,9 +16,6 @@ app.post('/upload', authenticatedUpload);
 // 文件访问接口
 app.get('/file/:id', fileHandler);
 
-// 根路径重定向到index.html
-app.get('/', (c) => c.redirect('/index.html'));
-
 // 健康检查和版本信息
 app.get('/api/health', (c) => {
   return c.json({

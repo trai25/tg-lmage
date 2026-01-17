@@ -17,12 +17,19 @@ const uploadSingleFile = async (file, retries = 3) => {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await upload('/upload', formData);
+      // 后端返回的是数组，取第一个元素
+      const result = Array.isArray(response.data) ? response.data[0] : response.data;
+      
+      if (!result || !result.src) {
+        throw new Error('上传失败：服务器返回数据格式错误');
+      }
+      
       return {
         success: true,
         filename: file.name,
         size: file.size,
         type: file.type,
-        data: response.data,
+        data: result,
         uploadTime: new Date().toISOString(),
       };
     } catch (error) {

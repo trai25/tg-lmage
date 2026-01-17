@@ -1,8 +1,0 @@
-# 忽略所有构建产物
-*
-
-# 但保留这些文件
-!.gitignore
-!README.md
-!images/
-!images/**

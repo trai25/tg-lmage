@@ -42,13 +42,24 @@ export async function fileHandler(c) {
 
         // 如果找到文件URL
         if (fileUrl) {
-            // 如果是浏览器直接访问，返回预览页面
-            if (isBrowserDirectAccess) {
-                return createPreviewPage(c, id, fileUrl);
+            // 如果是下载请求，返回下载
+            if (isDownload) {
+                const response = await proxyFile(c, fileUrl);
+                const headers = new Headers(response.headers);
+                headers.set('Content-Disposition', 'attachment');
+                return new Response(response.body, {
+                    status: response.status,
+                    headers
+                });
             }
-
-            // 否则返回原图文件（包括下载、原图请求、图片嵌入等）
-            return await proxyFile(c, fileUrl);
+            
+            // 如果是原图请求（图片嵌入），返回原图
+            if (isRaw) {
+                return await proxyFile(c, fileUrl);
+            }
+            
+            // 其他所有情况，都返回预览页面
+            return createPreviewPage(c, id, fileUrl);
         }
 
         // 处理KV元数据

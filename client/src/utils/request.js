@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 // 创建 axios 实例
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
-  timeout: 30000, // 30秒超时
+  timeout: 120000, // 120秒超时（上传大文件需要更长时间）
   headers: {
     'Content-Type': 'application/json',
   },
@@ -93,7 +93,11 @@ request.interceptors.response.use(
       }
     } else if (error.request) {
       // 请求已发送但没有收到响应
-      toast.error('网络错误，请检查您的网络连接');
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        toast.error('上传超时，请检查网络或尝试压缩图片后重试');
+      } else {
+        toast.error('网络错误，请检查您的网络连接');
+      }
     } else {
       // 其他错误
       toast.error(error.message || '请求失败');

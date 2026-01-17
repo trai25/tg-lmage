@@ -3,51 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply h-full w-full;
+  }
+  
   body {
-    @apply font-hand text-pencil bg-white bg-graph-paper bg-graph antialiased overflow-x-hidden;
+    @apply font-hand text-pencil bg-gray-100 bg-graph-paper bg-graph antialiased overflow-x-hidden;
   }
 
-  /* Custom Scrollbar for Chrome/Safari/Edge */
+  #root {
+    @apply min-h-full flex flex-col;
+  }
+
+  /* Custom Scrollbar */
   ::-webkit-scrollbar {
-    width: 10px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-pencil/20 rounded-full border-2 border-transparent bg-clip-content;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-pencil/40;
+    @apply bg-pencil/20 rounded-full hover:bg-pencil/40 transition-colors;
   }
 }
 
 @layer components {
-  /* The "Paper" Container */
+  /* Paper Card Container */
   .paper-card {
-    @apply bg-white shadow-sketch border border-gray-200 relative;
+    @apply bg-white shadow-sketch border border-gray-200 relative w-full h-full min-h-[500px] flex flex-col;
   }
   
-  /* The "Tape" Effect */
-  .tape-top {
-    @apply absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-white/40 backdrop-blur-sm -rotate-2 shadow-tape z-10;
-  }
-  
-  /* Handwritten Input */
+  /* Inputs */
   .input-hand {
-    @apply w-full bg-transparent border-b-2 border-dashed border-gray-300 px-2 py-1 outline-none transition-all duration-300 focus:border-pencil focus:rotate-1 font-hand text-xl placeholder-gray-400;
+    @apply w-full bg-transparent border-b-2 border-dashed border-gray-300 px-2 py-2 outline-none transition-all duration-300 focus:border-pencil focus:bg-yellow-50/20 font-hand text-xl placeholder-gray-400;
   }
   
-  /* Doodle Button */
+  /* Buttons */
   .btn-doodle {
-    @apply px-6 py-2 border-2 border-pencil rounded-md font-hand text-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-sketch hover:-rotate-1 active:translate-y-0 active:shadow-none active:rotate-0 bg-white;
+    @apply px-4 py-2 border-2 border-pencil rounded-md font-hand text-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sketch active:translate-y-0 active:shadow-none bg-white flex items-center justify-center gap-2;
   }
   
   .btn-primary {
-    @apply btn-doodle bg-marker-yellow hover:bg-yellow-300;
+    @apply btn-doodle bg-marker-yellow hover:bg-yellow-300 border-pencil text-pencil font-bold;
   }
 
   .btn-secondary {
-    @apply btn-doodle bg-marker-blue hover:bg-blue-300;
+    @apply btn-doodle bg-marker-blue hover:bg-blue-300 border-pencil text-pencil;
   }
+
+  .btn-danger {
+    @apply btn-doodle bg-red-100 hover:bg-red-200 border-red-300 text-red-600;
+  }
+
+  /* Tape Effect */
+  .tape-top {
+    @apply absolute -top-3 left-1/2 -translate-x-1/2 w-32 h-8 bg-white/40 backdrop-blur-sm shadow-tape z-20 pointer-events-none;
+    transform: translateX(-50%) rotate(-1deg);
+  }
+}
+
+/* Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
 }

@@ -20,6 +20,11 @@ const HomePage = () => {
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0, percent: 0 });
 
   const handleUpload = async (files) => {
+    // 立即显示准备状态
+    setUploading(true);
+    setUploadResults([]);
+    setUploadProgress({ completed: 0, total: files.length, percent: 0 });
+    
     const validFiles = [];
     for (const file of files) {
       const validation = validateFile(file, {
@@ -34,11 +39,10 @@ const HomePage = () => {
       validFiles.push(file);
     }
 
-    if (validFiles.length === 0) return;
-
-    setUploading(true);
-    setUploadResults([]);
-    setUploadProgress({ completed: 0, total: validFiles.length, percent: 0 });
+    if (validFiles.length === 0) {
+      setUploading(false);
+      return;
+    }
 
     try {
       const result = await uploadFiles(

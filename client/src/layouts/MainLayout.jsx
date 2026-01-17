@@ -96,7 +96,9 @@ const MainLayout = () => {
               </p>
 
               <p className="text-gray-400 text-sm mt-2 rotate-slight-1">
-                Handcrafted with ♡ by 老王 © 2026
+                <span style={{ fontFamily: '"ZCOOL XiaoWei", "Ma Shan Zheng", "Liu Jian Mao Cao", cursive' }}>
+                  Handcrafted with ♡ by xiyewuqiu © 2026
+                </span>
               </p>
             </div>
           </footer>
